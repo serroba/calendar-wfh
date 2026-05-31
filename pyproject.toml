@@ -1,0 +1,11 @@
+[project]
+name = "calendar-wfh"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["holidays>=0.46"]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
