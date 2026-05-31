@@ -1,8 +1,9 @@
 import json
-import pytest
 from datetime import date
-from pathlib import Path
-from wfh.records import WFHRecord, load, save, add, remove, filter_fy
+
+import pytest
+
+from wfh.records import WFHRecord, add, filter_fy, load, remove, save
 
 
 @pytest.fixture

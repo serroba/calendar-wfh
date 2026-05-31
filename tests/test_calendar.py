@@ -1,6 +1,6 @@
 from datetime import date
-import pytest
-from wfh.calendar import is_business_day, expand_weekdays, financial_year_for, fy_bounds
+
+from wfh.calendar import expand_weekdays, financial_year_for, fy_bounds, is_business_day
 
 
 class TestIsBusinessDay:
@@ -35,9 +35,9 @@ class TestExpandWeekdays:
     def test_specific_weekdays_monday_wednesday(self):
         # Week of May 4–8 2026: no public holidays
         days = expand_weekdays(date(2026, 5, 4), date(2026, 5, 8), weekdays=[0, 2])
-        assert date(2026, 5, 4) in days      # Monday
+        assert date(2026, 5, 4) in days  # Monday
         assert date(2026, 5, 5) not in days  # Tuesday
-        assert date(2026, 5, 6) in days      # Wednesday
+        assert date(2026, 5, 6) in days  # Wednesday
         assert date(2026, 5, 7) not in days  # Thursday
         assert date(2026, 5, 8) not in days  # Friday
 
@@ -45,7 +45,7 @@ class TestExpandWeekdays:
         # Easter week 2026: Apr 6 is Easter Monday
         days = expand_weekdays(date(2026, 4, 6), date(2026, 4, 10))
         assert date(2026, 4, 6) not in days  # Easter Monday — holiday
-        assert date(2026, 4, 7) in days      # Tuesday — regular
+        assert date(2026, 4, 7) in days  # Tuesday — regular
 
     def test_empty_range_when_end_before_start(self):
         days = expand_weekdays(date(2026, 5, 10), date(2026, 5, 1))
@@ -63,7 +63,7 @@ class TestExpandWeekdays:
         # Apr 3 2026 is Good Friday (a Friday), should not appear even with weekdays=[4]
         days = expand_weekdays(date(2026, 4, 1), date(2026, 4, 10), weekdays=[4])
         assert date(2026, 4, 3) not in days  # Good Friday
-        assert date(2026, 4, 10) in days     # Regular Friday
+        assert date(2026, 4, 10) in days  # Regular Friday
 
 
 class TestFinancialYearFor:
