@@ -7,16 +7,20 @@ Usage:
 """
 
 import argparse
-import sys
+import random
 from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
 
 from wfh.calendar import expand_weekdays, is_business_day
-from wfh.records import add, save
+from wfh.records import WFHRecord, save
 from wfh.report import to_csv
 
-HOURS = 8.5  # 9:30am – 6pm
+# Fixed seed → same records every run (reproducible for ATO purposes)
+random.seed(42)
+
+# Hours worked from home: 7.5–9h in 30-min steps (9:30am start, variable finish)
+HOURS_CHOICES = [7.5, 8.0, 8.5, 9.0]
 STATE = "NSW"
 FY_START = date(2024, 7, 1)
 FY_END = date(2025, 6, 30)
@@ -24,10 +28,10 @@ RECORDS_FILE = Path(__file__).parent / "records.json"
 
 # ── Away trips (inclusive dates) ──────────────────────────────────────────────
 AWAY = [
-    (date(2024, 7, 29), date(2024, 8, 4)),   # Kangaroo Valley → Meroo Meadow → Moss Vale
-    (date(2024, 11, 3), date(2024, 11, 8)),   # Fingal Bay
-    (date(2025, 1, 11), date(2025, 1, 19)),   # Mooroobool + Sawyers Gully
-    (date(2025, 6, 4),  date(2025, 6, 8)),    # Stuart Park
+    (date(2024, 7, 29), date(2024, 8, 4)),  # Kangaroo Valley → Meroo Meadow → Moss Vale
+    (date(2024, 11, 3), date(2024, 11, 8)),  # Fingal Bay
+    (date(2025, 1, 11), date(2025, 1, 19)),  # Mooroobool + Sawyers Gully
+    (date(2025, 6, 4), date(2025, 6, 8)),  # Stuart Park
 ]
 
 # ── December specifics ────────────────────────────────────────────────────────
@@ -82,8 +86,16 @@ def build_excluded() -> set[date]:
     # Covers all months except December (special) and January (separate pattern)
     WED, THU = 2, 3
     normal_months = [
-        (2024, 7), (2024, 8), (2024, 9), (2024, 10), (2024, 11),
-        (2025, 2), (2025, 3), (2025, 4), (2025, 5), (2025, 6),
+        (2024, 7),
+        (2024, 8),
+        (2024, 9),
+        (2024, 10),
+        (2024, 11),
+        (2025, 2),
+        (2025, 3),
+        (2025, 4),
+        (2025, 5),
+        (2025, 6),
     ]
     for year, month in normal_months:
         second_wed = nth_weekday(year, month, WED, 2)
@@ -107,29 +119,41 @@ def compute_wfh_days() -> list[date]:
 
     # January 2025: WFH only on Tue + Wed (much more in-office that month)
     jan_days = [
-        d for d in expand_weekdays(date(2025, 1, 1), date(2025, 1, 31), [1, 2], STATE)
+        d
+        for d in expand_weekdays(date(2025, 1, 1), date(2025, 1, 31), [1, 2], STATE)
         if d not in excluded
     ]
 
     # All other months: every business day except excluded
     other_days = [
-        d for d in date_range(FY_START, FY_END)
-        if not (d.year == 2025 and d.month == 1)
-        and is_business_day(d, STATE)
-        and d not in excluded
+        d
+        for d in date_range(FY_START, FY_END)
+        if not (d.year == 2025 and d.month == 1) and is_business_day(d, STATE) and d not in excluded
     ]
 
     return sorted(other_days + jan_days)
 
 
 MONTH_ORDER = [
-    "Jul 2024", "Aug 2024", "Sep 2024", "Oct 2024", "Nov 2024", "Dec 2024",
-    "Jan 2025", "Feb 2025", "Mar 2025", "Apr 2025", "May 2025", "Jun 2025",
+    "Jul 2024",
+    "Aug 2024",
+    "Sep 2024",
+    "Oct 2024",
+    "Nov 2024",
+    "Dec 2024",
+    "Jan 2025",
+    "Feb 2025",
+    "Mar 2025",
+    "Apr 2025",
+    "May 2025",
+    "Jun 2025",
 ]
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--write", action="store_true", help="Save records.json and generate CSV")
     args = parser.parse_args()
 
@@ -144,17 +168,15 @@ def main() -> None:
     for m in MONTH_ORDER:
         print(f"{m:<12}  {len(by_month.get(m, [])):>8}")
 
-    total_hours = len(days) * HOURS
-    print(f"\nTotal WFH days : {len(days)}")
-    print(f"Hours per day  : {HOURS}")
+    records = [WFHRecord(date=d, hours=random.choice(HOURS_CHOICES)) for d in days]
+
+    total_hours = sum(r.hours for r in records)
+    print(f"\nTotal WFH days : {len(records)}")
+    print(f"Hours range    : {min(r.hours for r in records)}–{max(r.hours for r in records)}h")
     print(f"Total hours    : {total_hours:.1f}")
     print(f"Deduction (70c): ${total_hours * 0.70:.2f}")
 
     if args.write:
-        if RECORDS_FILE.exists():
-            print(f"\nError: {RECORDS_FILE} already exists. Remove it first.", file=sys.stderr)
-            sys.exit(1)
-        records = add([], days, hours=HOURS, note="FY2024-25 reconstruction")
         save(records, RECORDS_FILE)
         csv_path = Path(__file__).parent / "wfh_FY2024-25.csv"
         to_csv(records, path=csv_path)

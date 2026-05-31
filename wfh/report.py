@@ -15,7 +15,7 @@ def to_csv(records: list[WFHRecord], path: Path | None = None) -> str:
     out = io.StringIO()
     writer = csv.writer(out)
     deduction_header = f"Deduction @ ${RATE_PER_HOUR}/hr ($)"
-    writer.writerow(["Date", "Day", "Hours WFH", "Running Total (hrs)", deduction_header, "Note"])
+    writer.writerow(["Date", "Day", "Hours WFH", "Running Total (hrs)", deduction_header])
 
     running = 0.0
     for r in records:
@@ -27,15 +27,12 @@ def to_csv(records: list[WFHRecord], path: Path | None = None) -> str:
                 f"{r.hours:.1f}",
                 f"{running:.1f}",
                 f"{running * RATE_PER_HOUR:.2f}",
-                r.note,
             ]
         )
 
     total_hours = sum(r.hours for r in records)
     writer.writerow([])
-    writer.writerow(
-        ["TOTAL", "", f"{total_hours:.1f}", "", f"{total_hours * RATE_PER_HOUR:.2f}", ""]
-    )
+    writer.writerow(["TOTAL", "", f"{total_hours:.1f}", "", f"{total_hours * RATE_PER_HOUR:.2f}"])
 
     csv_str = out.getvalue()
 

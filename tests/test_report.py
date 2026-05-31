@@ -48,9 +48,6 @@ class TestToCsv:
         expected = round(23.5 * RATE_PER_HOUR, 2)
         assert float(rows[2][4]) == pytest.approx(expected)
 
-    def test_note_included(self, records):
-        assert "Early finish" in to_csv(records)
-
     def test_day_name_included(self, records):
         assert "Monday" in to_csv(records)
 
