@@ -1,16 +1,18 @@
 import csv
 import io
-import pytest
 from datetime import date
+
+import pytest
+
 from wfh.records import WFHRecord
-from wfh.report import to_csv, summary, RATE_PER_HOUR
+from wfh.report import RATE_PER_HOUR, summary, to_csv
 
 
 @pytest.fixture
 def records():
     return [
-        WFHRecord(date=date(2026, 5, 4), hours=8.0),           # Monday
-        WFHRecord(date=date(2026, 5, 5), hours=8.0),           # Tuesday
+        WFHRecord(date=date(2026, 5, 4), hours=8.0),  # Monday
+        WFHRecord(date=date(2026, 5, 5), hours=8.0),  # Tuesday
         WFHRecord(date=date(2026, 5, 6), hours=7.5, note="Early finish"),  # Wednesday
     ]
 

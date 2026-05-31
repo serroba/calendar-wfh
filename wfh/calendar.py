@@ -15,7 +15,7 @@ def expand_weekdays(
     weekdays: list[int] | None = None,
     state: str = "NSW",
 ) -> list[date]:
-    """Return all days in [start, end] that fall on the given weekdays and are not public holidays.
+    """Return all days in [start, end] matching weekdays, excluding public holidays.
 
     weekdays: list of ints 0=Mon … 6=Sun; None means Mon–Fri (0–4).
     """
